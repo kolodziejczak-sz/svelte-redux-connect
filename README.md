@@ -1,40 +1,43 @@
-# svelte-redux
-redux binding to svelte
+# svelte-redux-connect
 
-Recreated the solution from react-redux. Purpose of this library is to use redux store instead of svelte one.
+Redux binding to Svelte based on react-redux.
 
-Example below
+I've recreated the solution from react-redux - the connect API is identical.
+The Purpose of this library is to use redux store instead of the svelte one - this way you can take advantage of all redux tools.
+
+Example below.
+
 ```js
 // App.svelte
 <script>
-  import { StoreProvider } from "svelte-redux";
+  import { StoreProvider } from "this-library";
   import store from "./store.js"; // redux store
-  import Info from "./Info";
+  import Todos from "./Todos";
 </script>
 
 <StoreProvider {store}>
   <Info />
 </StoreProvider>
 
-// Info/index.js
-import { connect } from "svelte-redux";
+// Todos/index.js
 import { createSelector } from "reselect";
-import Info from "./Info.svelte";
+import { connect } from "../lib/src";
+import Todos from "./Todos.svelte";
 
 const selectTodos = state => state.todos;
 
-const selectCompletedTodos = createSelector(
-  todosSelector,
-  todos => todos.filter(({ completed}) => completed))
+const selectUndoneTodos = createSelector(
+  selectTodos,
+  todos => todos.filter(t => !t.done)
 );
 
-const addTodo = (text) => ({
+const addTodo = text => ({
   type: "ADD_TODO",
-  text: text
+  text
 });
 
 const mapStateToProps = {
-  todos: selectAllTodos
+  todos: selectUndoneTodos
 };
 
 const mapDispatchToProps = {
@@ -43,13 +46,12 @@ const mapDispatchToProps = {
 
 // or by functions
 // const mapStateToProps = state => ({
-//   todos: selectTodos(state)
+//   todos: selectUndoneTodos(state)
 // });
 
 // const mapDispatchToProps = dispatch => ({
-//  addTodo: (text) => dispatch(addTodo)
+//   addTodo: text => dispatch(addTodo(text))
 // });
 
-
-export default connect(mapStateToProps, mapDispatchToProps)(Info);
+export default connect(mapStateToProps, mapDispatchToProps)(Todos);
 ```
