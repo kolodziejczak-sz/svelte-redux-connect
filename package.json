@@ -1,6 +1,6 @@
 {
   "name": "svelte-redux-connect",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Redux binding to Svelte based on react-redux",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kolodziejczak-sz/svelte-redux.git"
+    "url": "git+https://github.com/kolodziejczak-sz/svelte-redux-connect.git"
   },
   "keywords": [
     "redux",
@@ -18,9 +18,9 @@
   "author": "kolodziejczak-sz",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/kolodziejczak-sz/svelte-redux/issues"
+    "url": "https://github.com/kolodziejczak-sz/svelte-redux-connect/issues"
   },
-  "homepage": "https://github.com/kolodziejczak-sz/svelte-redux#readme",
+  "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
     "svelte": "^3.12.1"
   }
