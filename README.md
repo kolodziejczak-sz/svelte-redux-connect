@@ -16,7 +16,7 @@ Example below.
 </script>
 
 <StoreProvider {store}>
-  <Info />
+  <Todos />
 </StoreProvider>
 
 // Todos/index.js
@@ -54,4 +54,22 @@ const mapDispatchToProps = {
 // });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Todos);
+
+
+// Todos/Todos.svelte
+
+<script>
+  export let addTodo = () => {};
+  export let todos = [];
+
+  let text = "";
+</script>
+
+<input bind:value={text} />
+<button on:click={() => addTodo(text)}>add todo</button>
+<ul>
+  {#each todos as t}
+    <li>{t}</li>
+  {/each}
+</ul>
 ```
