@@ -12,7 +12,7 @@ Example below.
 ```js
 // App.svelte
 <script>
-  import { StoreProvider } from "this-library";
+  import { StoreProvider } from "svelte-redux-connect";
   import store from "./store.js"; // redux store
   import Todos from "./Todos";
 </script>
@@ -23,7 +23,7 @@ Example below.
 
 // Todos/index.js
 import { createSelector } from "reselect";
-import { connect } from "../lib/src";
+import { connect } from "svelte-redux-connect";
 import Todos from "./Todos.svelte";
 
 const selectTodos = state => state.todos;
