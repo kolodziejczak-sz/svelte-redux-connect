@@ -1,11 +1,11 @@
 import { isFunction, isObject } from "./utils";
 
-export default mapStateToProps => state => {
-  if (isFunction(mapStateToProps)) {
-    return mapStateToProps(state);
+const mapStateToPropsFactory = draft => state => {
+  if (isFunction(draft)) {
+    return draft(state);
   }
-  if (isObject(mapStateToProps)) {
-    return Object.entries(mapStateToProps).reduce((props, [key, selector]) => {
+  if (isObject(draft)) {
+    return Object.entries(draft).reduce((props, [key, selector]) => {
       props[key] = selector(state);
 
       return props;
@@ -16,3 +16,5 @@ export default mapStateToProps => state => {
     );
   }
 };
+
+export default mapStateToPropsFactory;

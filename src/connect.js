@@ -1,13 +1,12 @@
+import mapStateToPropsFactory from "./mapStateToPropsFactory";
+import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 import {
   getStore,
   setComponentProps,
   onComponentDestroy
 } from "./svelteBindings";
 
-import mapStateToPropsFactory from "./mapStateToProps";
-import mapDispatchToPropsFactory from "./mapDispatchToProps";
-
-const connect = (mapStateToProps, mapDispatchToProps) => Component =>
+const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
   function(options) {
     const store = getStore();
 
@@ -17,14 +16,15 @@ const connect = (mapStateToProps, mapDispatchToProps) => Component =>
     }
 
     const { getState, dispatch, subscribe } = store;
-    const instance = new Component(options);
+    const instance = new ComponentClass(options);
 
-    if (mapStateToProps) {
-      const mapFn = mapStateToPropsFactory(mapStateToProps);
+    if (stateToPropsDraft) {
+      const mapStateToProps = mapStateToPropsFactory(stateToPropsDraft);
 
       const stateChangeHandler = () => {
         const newState = getState();
-        const props = mapFn(newState);
+        const props = mapStateToProps(newState);
+
         setComponentProps(instance, props);
       };
 
@@ -34,9 +34,11 @@ const connect = (mapStateToProps, mapDispatchToProps) => Component =>
       onComponentDestroy(instance, unsubscribeStore);
     }
 
-    if (mapDispatchToProps) {
-      const mapFn = mapDispatchToPropsFactory(mapDispatchToProps);
-      const props = mapFn(dispatch);
+    if (dispatchToPropsDraft) {
+      const mapDispatchToProps = mapDispatchToPropsFactory(
+        dispatchToPropsDraft
+      );
+      const props = mapDispatchToProps(dispatch);
 
       setComponentProps(instance, props);
     }
