@@ -5,6 +5,8 @@ Redux binding to Svelte based on react-redux.
 I've recreated the solution from react-redux - the connect API is identical.
 The Purpose of this library is to use redux store instead of the svelte one - this way you can take advantage of all redux tools.
 
+I'm aware that there's already npm-packages which are trying to achieve the same goal, but actually I don't think they work as should be - I tried them and I had to either use Svelte's store, change API or take care of store subscription in the body of connected component. This tiny library is the answer to the above problems and I decided to share it with everyone.
+
 Example below.
 
 ```js
