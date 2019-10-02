@@ -1,15 +1,8 @@
-import { isFunction, isObject } from "./utils";
+import { isFunction } from "lodash";
 
-const mapStateToPropsFactory = draft => state => {
+const mapStateToPropsFactory = draft => (state, ownProps) => {
   if (isFunction(draft)) {
-    return draft(state);
-  }
-  if (isObject(draft)) {
-    return Object.entries(draft).reduce((props, [key, selector]) => {
-      props[key] = selector(state);
-
-      return props;
-    }, {});
+    return draft(state, ownProps);
   } else {
     console.log(
       "mapStateToProps: passed argument supposed to be function or object"

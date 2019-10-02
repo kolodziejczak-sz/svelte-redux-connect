@@ -1,6 +1,6 @@
-import StoreProvider from "./StoreProvider.svelte";
+import Provider from "./Provider.svelte";
 import connect from "./connect";
 
-export { connect, StoreProvider };
+export { connect, Provider };
 
 export default connect;

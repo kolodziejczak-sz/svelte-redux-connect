@@ -1,1 +1,1 @@
-export { connect, StoreProvider } from "./src";
+export { connect, Provider } from "./src";

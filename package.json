@@ -13,7 +13,10 @@
   "keywords": [
     "redux",
     "svelte",
-    "react-redux"
+    "react-redux",
+    "svelte-redux",
+    "svelte3",
+    "react"
   ],
   "author": "kolodziejczak-sz",
   "license": "ISC",
@@ -22,6 +25,7 @@
   },
   "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
+    "lodash": "^4.17.15",
     "svelte": "^3.12.1"
   }
 }

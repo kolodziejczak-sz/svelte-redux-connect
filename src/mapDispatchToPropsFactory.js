@@ -1,8 +1,8 @@
-import { isFunction, isObject } from "./utils";
+import { isFunction, isObject } from "lodash";
 
-const mapDispatchToPropsFactory = draft => dispatch => {
+const mapDispatchToPropsFactory = draft => (dispatch, ownProps) => {
   if (isFunction(draft)) {
-    return draft(dispatch);
+    return draft(dispatch, ownProps);
   }
   if (isObject(draft)) {
     return Object.entries(draft).reduce((props, [key, actionCreator]) => {
