@@ -1,4 +1,3 @@
-import { pick, uniq } from "lodash";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 import { getStoreContext } from "./storeContext";
@@ -29,7 +28,7 @@ const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
     const shouldUpdateDispatchPropsOnOwnPropsChange =
       dispatchToPropsDraft && dispatchToPropsDraft.length === 2;
 
-    let ownPropsKeys = Object.keys(initialProps);
+    let ownProps = initialProps;
     let stateProps, dispatchProps;
 
     if (mapStateToProps) {
@@ -51,11 +50,10 @@ const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
     if (shouldSubscribeToStore) {
       const stateChangeHandler = () => {
         const newState = getState();
-        const ownProps = shouldUpdateStatePropsOnOwnPropsChange
-          ? pick(instance.$$.ctx, ownPropsKeys)
-          : undefined;
-
-        const newStateProps = mapStateToProps(newState, ownProps);
+        const newStateProps = mapStateToProps(
+          newState,
+          shouldUpdateStatePropsOnOwnPropsChange ? ownProps : undefined
+        );
 
         propsChangeHandler(undefined, newStateProps, undefined);
       };
@@ -70,9 +68,7 @@ const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
           shouldUpdateStatePropsOnOwnPropsChange ||
           shouldUpdateDispatchPropsOnOwnPropsChange
         ) {
-          ownPropsKeys = uniq([...ownPropsKeys, ...ownPropsChange]);
-
-          const ownProps = pick(instance.$$.ctx, ownPropsKeys);
+          ownProps = { ...ownProps, ...ownPropsChange };
 
           if (shouldUpdateStatePropsOnOwnPropsChange) {
             stateProps = mapStateToProps(getState(), ownProps);
