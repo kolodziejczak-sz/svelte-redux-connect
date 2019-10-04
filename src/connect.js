@@ -1,11 +1,11 @@
-import { uniq, pick } from "lodash";
+import { pick, uniq } from "lodash";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
-import { getStore } from "./storeAsContext";
+import { getStoreContext } from "./storeContext";
 
 const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
   function(options) {
-    const store = getStore();
+    const store = getStoreContext();
 
     if (!store) {
       console.log("connect: Please provide any store by StoreProvider");
