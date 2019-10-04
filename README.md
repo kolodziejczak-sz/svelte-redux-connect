@@ -12,14 +12,14 @@ Example below.
 ```js
 // App.svelte
 <script>
-  import { StoreProvider } from "svelte-redux-connect";
+  import { Provider } from "svelte-redux-connect";
   import store from "./store.js"; // redux store
   import Todos from "./Todos";
 </script>
 
-<StoreProvider {store}>
+<Provider value={store}>
   <Todos />
-</StoreProvider>
+</Provider>
 
 // Todos/index.js
 import { createSelector } from "reselect";
