@@ -1,4 +1,4 @@
-import { xor, pick } from "lodash";
+import { uniq, pick } from "lodash";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 import { getStore } from "./storeAsContext";
@@ -12,74 +12,84 @@ const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
       return;
     }
 
-    let stateProps,
-      mapStateToProps,
-      mapDispatchToProps,
-      statePropsKeys,
-      dispatchProps,
-      dispatchPropsKeys,
-      ownPropsKeys;
-
     const { getState, dispatch, subscribe } = store;
+    const { props: initialProps } = options;
+
     const instance = new ComponentClass(options);
+
+    const propsSetter = instance.$set;
+
+    const mapStateToProps =
+      stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
+    const mapDispatchToProps =
+      dispatchToPropsDraft && mapDispatchToPropsFactory(dispatchToPropsDraft);
+
     const shouldUpdateStatePropsOnOwnPropsChange =
       stateToPropsDraft && stateToPropsDraft.length === 2;
     const shouldUpdateDispatchPropsOnOwnPropsChange =
       dispatchToPropsDraft && dispatchToPropsDraft.length === 2;
-    const legacyPropsSetter = instance.$set;
 
-    const customPropsSetter = (ownPropsChange, stateProps, dispatchProps) => {
-      if (ownPropsChange) {
-        if (
-          shouldUpdateStatePropsOnOwnPropsChange ||
-          shouldUpdateDispatchPropsOnOwnPropsChange
-        ) {
-          const ownProps = pick(instance.$$.ctx, ownPropsKeys);
+    let ownPropsKeys = Object.keys(initialProps);
+    let stateProps, dispatchProps;
 
-          shouldUpdateStatePropsOnOwnPropsChange &&
-            (stateProps = mapStateToProps(getState(), ownProps));
-          shouldUpdateDispatchPropsOnOwnPropsChange &&
-            (dispatchProps = mapDispatchToProps(dispatch, ownProps));
-        }
-      }
-      console.log(
-        "customPropsSetter",
-        ownPropsChange,
-        stateProps,
-        dispatchProps
+    if (mapStateToProps) {
+      stateProps = mapStateToProps(
+        getState(),
+        shouldUpdateStatePropsOnOwnPropsChange ? initialProps : undefined
       );
-      legacyPropsSetter({ ...ownPropsChange, ...stateProps, ...dispatchProps });
-    };
+    }
 
-    if (stateToPropsDraft) {
-      // chodzi o to ze keye ustawiam po zbudowaniu stateProps, a zeby je zbudowac juz powinienem przekazac ownProps
-      mapStateToProps = mapStateToPropsFactory(stateToPropsDraft);
-      stateProps = mapStateToProps(getState());
-      statePropsKeys = Object.keys(stateProps);
+    if (mapDispatchToProps) {
+      dispatchProps = mapDispatchToProps(
+        dispatch,
+        shouldUpdateDispatchPropsOnOwnPropsChange ? initialProps : undefined
+      );
+    }
 
+    const shouldSubscribeToStore = Boolean(mapStateToProps);
+
+    if (shouldSubscribeToStore) {
       const stateChangeHandler = () => {
         const newState = getState();
-        const newStateProps = mapStateToProps(newState);
+        const ownProps = shouldUpdateStatePropsOnOwnPropsChange
+          ? pick(instance.$$.ctx, ownPropsKeys)
+          : undefined;
 
-        customPropsSetter(undefined, newStateProps, undefined);
+        const newStateProps = mapStateToProps(newState, ownProps);
+
+        propsChangeHandler(undefined, newStateProps, undefined);
       };
 
       const unsubscribeStore = subscribe(stateChangeHandler);
       instance.$$.on_destroy.push(unsubscribeStore);
     }
 
-    if (dispatchToPropsDraft) {
-      mapDispatchToProps = mapDispatchToPropsFactory(dispatchToPropsDraft);
-      dispatchProps = mapDispatchToProps(dispatch);
-      dispatchPropsKeys = Object.keys(dispatchProps);
-    }
+    const propsChangeHandler = (ownPropsChange, stateProps, dispatchProps) => {
+      if (ownPropsChange) {
+        if (
+          shouldUpdateStatePropsOnOwnPropsChange ||
+          shouldUpdateDispatchPropsOnOwnPropsChange
+        ) {
+          ownPropsKeys = uniq([...ownPropsKeys, ...ownPropsChange]);
 
-    const connectedProps = [...dispatchPropsKeys, ...statePropsKeys];
-    ownPropsKeys = xor(instance.$$.props, connectedProps);
+          const ownProps = pick(instance.$$.ctx, ownPropsKeys);
 
-    instance.$set = customPropsSetter;
+          if (shouldUpdateStatePropsOnOwnPropsChange) {
+            stateProps = mapStateToProps(getState(), ownProps);
+          }
 
-    customPropsSetter(undefined, stateProps, dispatchProps);
+          if (shouldUpdateDispatchPropsOnOwnPropsChange) {
+            dispatchProps = mapDispatchToProps(dispatch, ownProps);
+          }
+        }
+      }
+      propsSetter({ ...ownPropsChange, ...stateProps, ...dispatchProps });
+    };
+
+    instance.$set = propsChangeHandler;
+
+    propsChangeHandler(undefined, stateProps, dispatchProps);
+
     return instance;
   };
 
