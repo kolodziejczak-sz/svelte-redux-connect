@@ -2,7 +2,17 @@ import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 import { getStoreContext } from "./storeContext";
 
-const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
+const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
+  ...ownProps,
+  ...stateProps,
+  ...dispatchProps
+});
+
+const connect = (
+  stateToPropsDraft,
+  dispatchToPropsDraft,
+  mergeProps = defaultMergeProps
+) => ComponentClass =>
   function(options) {
     const store = getStoreContext();
 
@@ -79,7 +89,9 @@ const connect = (stateToPropsDraft, dispatchToPropsDraft) => ComponentClass =>
           }
         }
       }
-      propsSetter({ ...ownPropsChange, ...stateProps, ...dispatchProps });
+
+      const newProps = mergeProps(stateProps, dispatchProps, ownProps);
+      propsSetter(newProps);
     };
 
     instance.$set = propsChangeHandler;
