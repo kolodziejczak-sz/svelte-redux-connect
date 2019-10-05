@@ -8,16 +8,41 @@ const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
   ...dispatchProps
 });
 
+const defaultAreStatesEqual = (nextState, prevState) => {
+  return prevState === nextState;
+};
+
+const FalseBecauseSvelteWillHandleIt = () => false;
+
 const connect = (
   stateToPropsDraft,
   dispatchToPropsDraft,
-  mergeProps = defaultMergeProps
-) => ComponentClass =>
-  function(options) {
-    const store = getStoreContext();
+  mergeProps = defaultMergeProps,
+  {
+    context,
+    areStatesEqual = defaultAreStatesEqual,
+    areOwnPropsEqual = FalseBecauseSvelteWillHandleIt,
+    areStatePropsEqual = FalseBecauseSvelteWillHandleIt,
+    areMergedPropsEqual = FalseBecauseSvelteWillHandleIt
+  } = {}
+) => ComponentClass => {
+  const mapStateToProps =
+    stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
+  const mapDispatchToProps =
+    dispatchToPropsDraft && mapDispatchToPropsFactory(dispatchToPropsDraft);
+
+  const shouldUpdateStatePropsOnOwnPropsChange =
+    mapStateToProps && stateToPropsDraft.length === 2;
+  const shouldUpdateDispatchPropsOnOwnPropsChange =
+    mapDispatchToProps && dispatchToPropsDraft.length === 2;
+
+  return function(options) {
+    const store = context || getStoreContext();
 
     if (!store) {
-      console.log("connect: Please provide any store by StoreProvider");
+      console.log(
+        "connect: Please provide any store by Provider or by connect options object"
+      );
       return;
     }
 
@@ -28,77 +53,106 @@ const connect = (
 
     const propsSetter = instance.$set;
 
-    const mapStateToProps =
-      stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
-    const mapDispatchToProps =
-      dispatchToPropsDraft && mapDispatchToPropsFactory(dispatchToPropsDraft);
+    let state,
+      stateProps,
+      mergedProps,
+      ownProps = initialProps;
 
-    const shouldUpdateStatePropsOnOwnPropsChange =
-      stateToPropsDraft && stateToPropsDraft.length === 2;
-    const shouldUpdateDispatchPropsOnOwnPropsChange =
-      dispatchToPropsDraft && dispatchToPropsDraft.length === 2;
+    const propsChangeHandler = (
+      ownPropsChange,
+      nextStateProps,
+      nextDispatchProps
+    ) => {
+      if (nextStateProps) {
+        const prevStateProps = stateProps;
+        stateProps = nextStateProps;
 
-    let ownProps = initialProps;
-    let stateProps, dispatchProps;
+        if (areStatePropsEqual(nextStateProps, prevStateProps)) {
+          return;
+        }
+      }
 
-    if (mapStateToProps) {
-      stateProps = mapStateToProps(
-        getState(),
-        shouldUpdateStatePropsOnOwnPropsChange ? initialProps : undefined
-      );
-    }
+      if (ownPropsChange) {
+        const prevOwnProps = ownProps;
+        const nextOwnProps = (ownProps = {
+          ...prevOwnProps,
+          ...ownPropsChange
+        });
 
-    if (mapDispatchToProps) {
-      dispatchProps = mapDispatchToProps(
-        dispatch,
-        shouldUpdateDispatchPropsOnOwnPropsChange ? initialProps : undefined
-      );
-    }
+        if (areOwnPropsEqual(nextOwnProps, prevOwnProps)) {
+          return;
+        }
+
+        if (shouldUpdateStatePropsOnOwnPropsChange) {
+          nextStateProps = stateProps = mapStateToProps(getState(), ownProps);
+        }
+
+        if (shouldUpdateDispatchPropsOnOwnPropsChange) {
+          nextDispatchProps = mapDispatchToProps(dispatch, ownProps);
+        }
+      }
+
+      const prevMergedProps = mergedProps;
+      const nextMergedProps = (mergedProps = mergeProps(
+        nextStateProps,
+        nextDispatchProps,
+        ownProps
+      ));
+
+      if (areMergedPropsEqual(nextMergedProps, prevMergedProps)) {
+        return;
+      }
+
+      propsSetter(mergedProps);
+    };
 
     const shouldSubscribeToStore = Boolean(mapStateToProps);
 
     if (shouldSubscribeToStore) {
       const stateChangeHandler = () => {
-        const newState = getState();
-        const newStateProps = mapStateToProps(
-          newState,
-          shouldUpdateStatePropsOnOwnPropsChange ? ownProps : undefined
-        );
+        const prevState = state;
+        const nextState = (state = getState());
 
-        propsChangeHandler(undefined, newStateProps, undefined);
+        if (areStatesEqual(nextState, prevState)) {
+          return;
+        }
+
+        const nextStateProps = (stateProps = mapStateToProps(
+          nextState,
+          shouldUpdateStatePropsOnOwnPropsChange ? ownProps : undefined
+        ));
+
+        propsChangeHandler(undefined, nextStateProps, undefined);
       };
 
       const unsubscribeStore = subscribe(stateChangeHandler);
       instance.$$.on_destroy.push(unsubscribeStore);
     }
 
-    const propsChangeHandler = (ownPropsChange, stateProps, dispatchProps) => {
-      if (ownPropsChange) {
-        if (
-          shouldUpdateStatePropsOnOwnPropsChange ||
-          shouldUpdateDispatchPropsOnOwnPropsChange
-        ) {
-          ownProps = { ...ownProps, ...ownPropsChange };
+    let initialStateProps, initialDispatchProps;
 
-          if (shouldUpdateStatePropsOnOwnPropsChange) {
-            stateProps = mapStateToProps(getState(), ownProps);
-          }
+    if (mapStateToProps) {
+      state = getState();
 
-          if (shouldUpdateDispatchPropsOnOwnPropsChange) {
-            dispatchProps = mapDispatchToProps(dispatch, ownProps);
-          }
-        }
-      }
+      initialStateProps = mapStateToProps(
+        state,
+        shouldUpdateStatePropsOnOwnPropsChange ? initialProps : undefined
+      );
+    }
 
-      const newProps = mergeProps(stateProps, dispatchProps, ownProps);
-      propsSetter(newProps);
-    };
+    if (mapDispatchToProps) {
+      initialDispatchProps = mapDispatchToProps(
+        dispatch,
+        shouldUpdateDispatchPropsOnOwnPropsChange ? initialProps : undefined
+      );
+    }
+
+    propsChangeHandler(undefined, initialStateProps, initialDispatchProps);
 
     instance.$set = propsChangeHandler;
 
-    propsChangeHandler(undefined, stateProps, dispatchProps);
-
     return instance;
   };
+};
 
 export default connect;
