@@ -7,7 +7,7 @@ The main goal of this library is making use of redux store instead of the svelte
 
 I'm aware that there's already npm-packages which are trying to achieve the same goal, but actually I don't think they work as they should be - I tried them and I had to either use Svelte's store, change API or take care of store subscription in the body of connected component. This tiny library is the answer to the above problems and I decided to share it with everyone.
 
-Example below.
+Basic example below.
 
 ```js
 // App.svelte
@@ -33,33 +33,20 @@ const selectUndoneTodos = createSelector(
   todos => todos.filter(t => !t.done)
 );
 
-const addTodo = text => ({
-  type: "ADD_TODO",
-  text
-});
+const addTodo = text => ({ type: "ADD_TODO", text });
 
-const mapStateToProps = {
-  todos: selectUndoneTodos
-};
+const mapStateToProps = state => ({
+  todos: selectUndoneTodos(state)
+});
 
 const mapDispatchToProps = {
   addTodo
 };
 
-// or by functions
-// const mapStateToProps = state => ({
-//   todos: selectUndoneTodos(state)
-// });
-
-// const mapDispatchToProps = dispatch => ({
-//   addTodo: text => dispatch(addTodo(text))
-// });
-
 export default connect(mapStateToProps, mapDispatchToProps)(Todos);
 
 
 // Todos/Todos.svelte
-
 <script>
   export let addTodo = () => {};
   export let todos = [];
@@ -75,3 +62,9 @@ export default connect(mapStateToProps, mapDispatchToProps)(Todos);
   {/each}
 </ul>
 ```
+
+If you're interest in docs you're free to base on https://react-redux.js.org/api/connect#overview
+Although there's little differences:
+
+- theres no support for 2 options fields: forwardRef and pure because author consider them as React specific.
+- default values for: areOwnPropsEqual, areStatePropsEqual, areMergedPropsEqual are functions that always returns false because Svelte's prop setter compares every field by itself.
