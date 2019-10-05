@@ -1,14 +1,14 @@
 <script>
   import { setStoreContext } from "./storeContext.js";
 
-  export let value;
+  export let store;
 
-  if (value === undefined) {
+  if (store === undefined) {
     console.warn(
-      "redux-svelte-connect: store value is undefined. Please provide store as prop called value."
+      "redux-svelte-connect: store value is undefined. Please provide store as prop."
     );
   } else {
-    setStoreContext(value);
+    setStoreContext(store);
   }
 </script>
 

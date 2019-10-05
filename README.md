@@ -17,7 +17,7 @@ Basic example below.
   import Todos from "./Todos";
 </script>
 
-<Provider value={store}>
+<Provider {store}>
   <Todos />
 </Provider>
 
