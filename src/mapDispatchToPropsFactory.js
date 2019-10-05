@@ -11,8 +11,8 @@ const mapDispatchToPropsFactory = draft => (dispatch, ownProps) => {
       return props;
     }, {});
   } else {
-    console.log(
-      "mapDispatchToProps: Passed argument supposed to be function or object"
+    console.warn(
+      "redux-svelte-connect: mapDispatchToProps supposed to be function or object"
     );
   }
 };

@@ -40,8 +40,8 @@ const connect = (
     const store = context || getStoreContext();
 
     if (!store) {
-      console.log(
-        "connect: Please provide any store by Provider or by connect options object"
+      console.warn(
+        "redux-svelte-connect: provide any store value by Provider component or options object"
       );
       return;
     }

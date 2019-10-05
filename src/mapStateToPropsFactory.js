@@ -4,8 +4,8 @@ const mapStateToPropsFactory = draft => (state, ownProps) => {
   if (isFunction(draft)) {
     return draft(state, ownProps);
   } else {
-    console.log(
-      "mapStateToProps: passed argument supposed to be function or object"
+    console.warn(
+      "redux-svelte-connect: mapStateToProps supposed to be function"
     );
   }
 };

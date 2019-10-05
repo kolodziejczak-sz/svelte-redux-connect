@@ -4,7 +4,9 @@
   export let value;
 
   if (value === undefined) {
-    console.log("store is undefined. Please provide store as prop.");
+    console.warn(
+      "redux-svelte-connect: store value is undefined. Please provide store as prop called value."
+    );
   } else {
     setStoreContext(value);
   }
