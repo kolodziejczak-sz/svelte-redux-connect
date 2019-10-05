@@ -1,4 +1,4 @@
-import { isFunction } from "lodash";
+import isFunction from "lodash.isfunction";
 
 const mapStateToPropsFactory = draft => (state, ownProps) => {
   if (isFunction(draft)) {

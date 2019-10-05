@@ -1,6 +1,6 @@
 {
   "name": "svelte-redux-connect",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Redux binding to Svelte based on react-redux",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
-    "lodash": "^4.17.15",
+    "lodash.isfunction": "^3.0.9",
+    "lodash.isobject": "^3.0.2",
     "svelte": "^3.12.1"
   }
 }
