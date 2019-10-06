@@ -64,7 +64,6 @@ export default connect(mapStateToProps, mapDispatchToProps)(Todos);
 ```
 
 If you're interest in docs you're free to base on https://react-redux.js.org/api/connect#overview
-Although there's little differences:
+Although there's little difference:
 
 - theres no support for 2 options fields: forwardRef and pure because author consider them as React specific.
-- default values for: areOwnPropsEqual, areStatePropsEqual, areMergedPropsEqual are functions that always returns false because Svelte's prop setter compares every field by itself.

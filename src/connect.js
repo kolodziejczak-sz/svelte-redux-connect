@@ -1,3 +1,4 @@
+import shallowEqual from "shallowequal";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 import { getStoreContext } from "./storeContext";
@@ -8,11 +9,7 @@ const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
   ...dispatchProps
 });
 
-const defaultAreStatesEqual = (nextState, prevState) => {
-  return prevState === nextState;
-};
-
-const FalseBecauseSvelteWillHandleIt = () => false;
+const strictEqual = (next, prev) => prev === next;
 
 const connect = (
   stateToPropsDraft,
@@ -20,10 +17,10 @@ const connect = (
   mergeProps = defaultMergeProps,
   {
     context,
-    areStatesEqual = defaultAreStatesEqual,
-    areOwnPropsEqual = FalseBecauseSvelteWillHandleIt,
-    areStatePropsEqual = FalseBecauseSvelteWillHandleIt,
-    areMergedPropsEqual = FalseBecauseSvelteWillHandleIt
+    areStatesEqual = strictEqual,
+    areOwnPropsEqual = shallowEqual,
+    areStatePropsEqual = shallowEqual,
+    areMergedPropsEqual = shallowEqual
   } = {}
 ) => ComponentClass => {
   const mapStateToProps =
@@ -117,10 +114,10 @@ const connect = (
           return;
         }
 
-        const nextStateProps = (stateProps = mapStateToProps(
+        const nextStateProps = mapStateToProps(
           nextState,
           shouldUpdateStatePropsOnOwnPropsChange ? ownProps : undefined
-        ));
+        );
 
         propsChangeHandler(undefined, nextStateProps, undefined);
       };
