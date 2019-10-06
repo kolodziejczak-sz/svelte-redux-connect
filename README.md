@@ -66,4 +66,4 @@ export default connect(mapStateToProps, mapDispatchToProps)(Todos);
 If you're interest in docs you're free to base on https://react-redux.js.org/api/connect#overview
 Although there's little difference:
 
-- theres no support for 2 options fields: forwardRef and pure because author consider them as React specific.
+- theres no support for 2 options fields: forwardRef and pure because author consider them as React specific. The implementation consider all components as pure in context of areStatesEqual, areOwnPropsEqual, areStatePropsEqual,areMergedPropsEqual functions behaviour.
