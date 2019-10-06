@@ -1,6 +1,6 @@
 <script>
   import { setContext } from "svelte";
-  import { STORE_CONTEXT_KEY } from "./storeContext.js";
+  import { STORE_CONTEXT_KEY } from "./constants.js";
 
   export let store;
 

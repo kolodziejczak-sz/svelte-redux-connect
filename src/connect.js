@@ -1,6 +1,6 @@
 import shallowEqual from "shallowequal";
 import { getContext } from "svelte";
-import { STORE_CONTEXT_KEY } from "./storeContext";
+import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 
@@ -35,7 +35,7 @@ const connect = (
     mapDispatchToProps && dispatchToPropsDraft.length === 2;
 
   return function(options) {
-    const store = getContext(context || STORE_CONTEXT_KEY);
+    const store = context || getContext(STORE_CONTEXT_KEY);
 
     if (!store) {
       console.warn(
