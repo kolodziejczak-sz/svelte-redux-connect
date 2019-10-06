@@ -56,39 +56,6 @@ const connect = (
       mergedProps,
       ownProps = initialOwnProps;
 
-    const propsChangeHandler = ownPropsChange => {
-      const prevOwnProps = ownProps;
-      const nextOwnProps = (ownProps = {
-        ...prevOwnProps,
-        ...ownPropsChange
-      });
-
-      if (areOwnPropsEqual(nextOwnProps, prevOwnProps)) {
-        return;
-      }
-
-      let nextStateProps, nextDispatchProps;
-
-      if (shouldUpdateStatePropsOnOwnPropsChange) {
-        nextStateProps = stateProps = mapStateToProps(getState(), ownProps);
-      }
-
-      if (shouldUpdateDispatchPropsOnOwnPropsChange) {
-        nextDispatchProps = mapDispatchToProps(dispatch, ownProps);
-      }
-
-      const prevMergedProps = mergedProps;
-      const nextMergedProps = (mergedProps = mergeProps(
-        nextStateProps,
-        nextDispatchProps,
-        ownProps
-      ));
-
-      if (!areMergedPropsEqual(nextMergedProps, prevMergedProps)) {
-        propsSetter(mergedProps);
-      }
-    };
-
     const shouldSubscribeToStore = Boolean(mapStateToProps);
 
     if (shouldSubscribeToStore) {
@@ -138,11 +105,46 @@ const connect = (
     );
 
     if (
-      shouldUpdateDispatchPropsOnOwnPropsChange ||
-      shouldUpdateStatePropsOnOwnPropsChange
+      !shouldUpdateStatePropsOnOwnPropsChange &&
+      !shouldUpdateDispatchPropsOnOwnPropsChange
     ) {
-      instance.$set = propsChangeHandler;
+      return instance;
     }
+
+    const propsChangeHandler = ownPropsChange => {
+      const prevOwnProps = ownProps;
+      const nextOwnProps = (ownProps = {
+        ...prevOwnProps,
+        ...ownPropsChange
+      });
+
+      if (areOwnPropsEqual(nextOwnProps, prevOwnProps)) {
+        return;
+      }
+
+      let nextStateProps, nextDispatchProps;
+
+      if (shouldUpdateStatePropsOnOwnPropsChange) {
+        nextStateProps = stateProps = mapStateToProps(getState(), ownProps);
+      }
+
+      if (shouldUpdateDispatchPropsOnOwnPropsChange) {
+        nextDispatchProps = mapDispatchToProps(dispatch, ownProps);
+      }
+
+      const prevMergedProps = mergedProps;
+      const nextMergedProps = (mergedProps = mergeProps(
+        nextStateProps,
+        nextDispatchProps,
+        ownProps
+      ));
+
+      if (!areMergedPropsEqual(nextMergedProps, prevMergedProps)) {
+        propsSetter(mergedProps);
+      }
+    };
+
+    instance.$set = propsChangeHandler;
 
     return instance;
   };
