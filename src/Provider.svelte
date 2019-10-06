@@ -1,5 +1,6 @@
 <script>
-  import { setStoreContext } from "./storeContext.js";
+  import { setContext } from "svelte";
+  import { STORE_CONTEXT_KEY } from "./storeContext.js";
 
   export let store;
 
@@ -8,7 +9,7 @@
       "redux-svelte-connect: store value is undefined. Please provide store as prop."
     );
   } else {
-    setStoreContext(store);
+    setContext(STORE_CONTEXT_KEY, store);
   }
 </script>
 

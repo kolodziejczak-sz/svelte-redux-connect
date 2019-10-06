@@ -1,7 +1,8 @@
 import shallowEqual from "shallowequal";
+import { getContext } from "svelte";
+import { STORE_CONTEXT_KEY } from "./storeContext";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
-import { getStoreContext } from "./storeContext";
 
 const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
   ...ownProps,
@@ -34,11 +35,11 @@ const connect = (
     mapDispatchToProps && dispatchToPropsDraft.length === 2;
 
   return function(options) {
-    const store = context || getStoreContext();
+    const store = getContext(context || STORE_CONTEXT_KEY);
 
     if (!store) {
       console.warn(
-        "redux-svelte-connect: provide any store value by Provider component or options object"
+        "redux-svelte-connect: provide any store value by Provider component or by property of options object"
       );
       return;
     }

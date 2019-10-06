@@ -1,6 +1,6 @@
 {
   "name": "svelte-redux-connect",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Redux binding to Svelte based on react-redux",
   "main": "index.js",
   "scripts": {
