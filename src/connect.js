@@ -15,15 +15,17 @@ const strictEqual = (next, prev) => prev === next;
 const connect = (
   stateToPropsDraft,
   dispatchToPropsDraft,
-  mergeProps = defaultMergeProps,
+  mergeProps,
   {
     context,
     areStatesEqual = strictEqual,
     areOwnPropsEqual = shallowEqual,
     areStatePropsEqual = shallowEqual,
-    areMergedPropsEqual = shallowEqual
+    areMergedPropsEqual = () => false
   } = {}
 ) => ComponentClass => {
+  mergeProps = mergeProps || defaultMergeProps;
+
   const mapStateToProps =
     stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
   const mapDispatchToProps =
@@ -33,6 +35,12 @@ const connect = (
     mapStateToProps && stateToPropsDraft.length === 2;
   const shouldUpdateDispatchPropsOnOwnPropsChange =
     mapDispatchToProps && dispatchToPropsDraft.length === 2;
+
+  const shouldCompareMergedProps = Boolean(mergeProps !== defaultMergeProps);
+
+  if (shouldCompareMergedProps) {
+    areMergedPropsEqual = shallowEqual;
+  }
 
   return function(options) {
     const store = context || getContext(STORE_CONTEXT_KEY);
@@ -55,6 +63,28 @@ const connect = (
       stateProps,
       mergedProps,
       ownProps = initialOwnProps;
+
+    let initialStateProps, initialDispatchProps;
+
+    if (mapStateToProps) {
+      state = getState();
+
+      initialStateProps = mapStateToProps(
+        state,
+        shouldUpdateStatePropsOnOwnPropsChange ? initialOwnProps : undefined
+      );
+    }
+
+    if (mapDispatchToProps) {
+      initialDispatchProps = mapDispatchToProps(
+        dispatch,
+        shouldUpdateDispatchPropsOnOwnPropsChange ? initialOwnProps : undefined
+      );
+    }
+
+    instance.$set(
+      mergeProps(initialStateProps, initialDispatchProps, initialOwnProps)
+    );
 
     const shouldSubscribeToStore = Boolean(mapStateToProps);
 
@@ -80,35 +110,6 @@ const connect = (
 
       const unsubscribeStore = subscribe(stateChangeHandler);
       instance.$$.on_destroy.push(unsubscribeStore);
-    }
-
-    let initialStateProps, initialDispatchProps;
-
-    if (mapStateToProps) {
-      state = getState();
-
-      initialStateProps = mapStateToProps(
-        state,
-        shouldUpdateStatePropsOnOwnPropsChange ? initialOwnProps : undefined
-      );
-    }
-
-    if (mapDispatchToProps) {
-      initialDispatchProps = mapDispatchToProps(
-        dispatch,
-        shouldUpdateDispatchPropsOnOwnPropsChange ? initialOwnProps : undefined
-      );
-    }
-
-    instance.$set(
-      mergeProps(initialStateProps, initialDispatchProps, initialOwnProps)
-    );
-
-    if (
-      !shouldUpdateStatePropsOnOwnPropsChange &&
-      !shouldUpdateDispatchPropsOnOwnPropsChange
-    ) {
-      return instance;
     }
 
     const propsChangeHandler = ownPropsChange => {
@@ -140,7 +141,7 @@ const connect = (
       ));
 
       if (!areMergedPropsEqual(nextMergedProps, prevMergedProps)) {
-        propsSetter(mergedProps);
+        propsSetter(nextMergedProps);
       }
     };
 
