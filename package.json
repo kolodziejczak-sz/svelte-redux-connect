@@ -25,9 +25,6 @@
   },
   "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
-    "lodash.isfunction": "^3.0.9",
-    "lodash.isobject": "^3.0.2",
-    "shallowequal": "^1.1.0",
     "svelte": "^3.12.1"
   }
 }

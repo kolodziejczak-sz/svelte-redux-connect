@@ -1,4 +1,4 @@
-import shallowEqual from "shallowequal";
+import { shallowEqual, strictEqual } from "./utils";
 import { getContext } from "svelte";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
@@ -9,8 +9,6 @@ const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
   ...stateProps,
   ...dispatchProps
 });
-
-const strictEqual = (next, prev) => prev === next;
 
 const connect = (
   stateToPropsDraft,
@@ -103,7 +101,7 @@ const connect = (
         ));
 
         if (!areStatePropsEqual(nextStateProps, prevStateProps)) {
-          changeMergedProps(nextStateProps, dispatchProps, ownProps);
+          changeProps(nextStateProps, dispatchProps, ownProps);
         }
       };
 
@@ -135,14 +133,10 @@ const connect = (
         );
       }
 
-      changeMergedProps(nextStateProps, nextDispatchProps, nextOwnProps);
+      changeProps(nextStateProps, nextDispatchProps, nextOwnProps);
     };
 
-    const changeMergedProps = (
-      nextStateProps,
-      nextDispatchProps,
-      nextOwnProps
-    ) => {
+    const changeProps = (nextStateProps, nextDispatchProps, nextOwnProps) => {
       const prevMergedProps = mergedProps;
       const nextMergedProps = (mergedProps = mergeProps(
         nextStateProps,
