@@ -27,6 +27,6 @@
   },
   "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
-    "svelte": "^3.16.4"
+    "svelte": "^3.16.7"
   }
 }
