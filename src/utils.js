@@ -2,6 +2,10 @@ export function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
+export function stubFalse() {
+  return false;
+}
+
 /**
  * Source: https://github.com/lodash/lodash/blob/master/isObject.js
  * License MIT

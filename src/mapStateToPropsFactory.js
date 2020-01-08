@@ -1,13 +1,11 @@
 import { isFunction } from "./utils";
 
-const mapStateToPropsFactory = draft => (state, ownProps) => {
+const mapStateToPropsFactory = draft => {
   if (isFunction(draft)) {
-    return draft(state, ownProps);
-  } else {
-    console.warn(
-      "redux-svelte-connect: mapStateToProps supposed to be function"
-    );
+    return draft;
   }
+
+  console.warn("redux-svelte-connect: mapStateToProps is not a function");
 };
 
 export default mapStateToPropsFactory;

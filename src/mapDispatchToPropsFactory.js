@@ -1,20 +1,22 @@
 import { isFunction, isObject } from "./utils";
 
-const mapDispatchToPropsFactory = draft => (dispatch, ownProps) => {
+const mapDispatchToPropsFactory = draft => {
   if (isFunction(draft)) {
-    return draft(dispatch, ownProps);
+    return draft;
   }
-  if (isObject(draft)) {
-    return Object.entries(draft).reduce((props, [key, actionCreator]) => {
-      props[key] = (...args) => dispatch(actionCreator(...args));
 
-      return props;
-    }, {});
-  } else {
-    console.warn(
-      "redux-svelte-connect: mapDispatchToProps supposed to be function or object"
-    );
+  if (isObject(draft)) {
+    return dispatch =>
+      Object.entries(draft).reduce((dispatchProps, [key, actionCreator]) => {
+        dispatchProps[key] = (...args) => dispatch(actionCreator(...args));
+
+        return dispatchProps;
+      }, {});
   }
+
+  console.warn(
+    "redux-svelte-connect: mapDispatchToProps is not a function or an object"
+  );
 };
 
 export default mapDispatchToPropsFactory;

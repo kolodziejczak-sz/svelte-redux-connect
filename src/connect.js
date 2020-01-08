@@ -1,4 +1,4 @@
-import { shallowEqual, strictEqual } from "./utils";
+import { shallowEqual, strictEqual, stubFalse } from "./utils";
 import { getContext } from "svelte";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
@@ -13,49 +13,41 @@ const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
 const connect = (
   stateToPropsDraft,
   dispatchToPropsDraft,
-  mergeProps,
+  mergeProps = defaultMergeProps,
   {
     context,
     areStatesEqual = strictEqual,
     areOwnPropsEqual = shallowEqual,
     areStatePropsEqual = shallowEqual,
-    areMergedPropsEqual = () => false
+    areMergedPropsEqual = mergeProps === defaultMergeProps
+      ? stubFalse
+      : shallowEqual
   } = {}
 ) => ComponentClass => {
-  mergeProps = mergeProps || defaultMergeProps;
-
   const mapStateToProps =
     stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
   const mapDispatchToProps =
     dispatchToPropsDraft && mapDispatchToPropsFactory(dispatchToPropsDraft);
 
-  const shouldUpdateStatePropsOnOwnPropsChange =
+  const shouldMapStateToPropsOnOwnPropsChange =
     mapStateToProps && stateToPropsDraft.length === 2;
-  const shouldUpdateDispatchPropsOnOwnPropsChange =
+  const shouldMapDispatchToPropsOnOwnPropsChange =
     mapDispatchToProps && dispatchToPropsDraft.length === 2;
-
-  const shouldCompareMergedProps = Boolean(mergeProps !== defaultMergeProps);
-
-  if (shouldCompareMergedProps) {
-    areMergedPropsEqual = shallowEqual;
-  }
 
   return function(options) {
     const store = context || getContext(STORE_CONTEXT_KEY);
 
     if (!store) {
       console.warn(
-        "redux-svelte-connect: provide any store value by Provider component or by property of options object"
+        "redux-svelte-connect: store does not exist. Use the <Provider> component or pass the context as an option to the connect function"
       );
       return;
     }
 
     const { getState, dispatch, subscribe } = store;
     const { props: initialOwnProps } = options;
-
     const instance = new ComponentClass(options);
-
-    const propsSetter = instance.$set;
+    const setProps = instance.$set;
 
     let state,
       stateProps,
@@ -65,91 +57,73 @@ const connect = (
 
     if (mapStateToProps) {
       state = getState();
-
-      stateProps = mapStateToProps(
-        state,
-        shouldUpdateStatePropsOnOwnPropsChange ? initialOwnProps : undefined
-      );
+      stateProps = mapStateToProps(state, initialOwnProps);
     }
 
     if (mapDispatchToProps) {
-      dispatchProps = mapDispatchToProps(
-        dispatch,
-        shouldUpdateDispatchPropsOnOwnPropsChange ? initialOwnProps : undefined
-      );
+      dispatchProps = mapDispatchToProps(dispatch, initialOwnProps);
     }
 
-    mergedProps = mergeProps(stateProps, dispatchProps, initialOwnProps);
+    const changeProps = () => {
+      const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
 
-    instance.$set(mergedProps);
+      if (areMergedPropsEqual(nextMergedProps, mergedProps)) {
+        return;
+      }
+
+      mergedProps = nextMergedProps;
+      setProps(mergedProps);
+    };
+
+    const onOwnPropsChange = ownPropsChange => {
+      const nextOwnProps = {
+        ...ownProps,
+        ...ownPropsChange
+      };
+
+      if (areOwnPropsEqual(nextOwnProps, ownProps)) {
+        return;
+      }
+
+      ownProps = nextOwnProps;
+
+      if (shouldMapStateToPropsOnOwnPropsChange) {
+        stateProps = mapStateToProps(getState(), ownProps);
+      }
+
+      if (shouldMapDispatchToPropsOnOwnPropsChange) {
+        dispatchProps = mapDispatchToProps(dispatch, ownProps);
+      }
+
+      changeProps();
+    };
 
     const shouldSubscribeToStore = Boolean(mapStateToProps);
 
     if (shouldSubscribeToStore) {
-      const stateChangeHandler = () => {
-        const prevState = state;
-        const nextState = (state = getState());
+      const unsubscribe = subscribe(() => {
+        const nextState = getState();
 
-        if (areStatesEqual(nextState, prevState)) {
+        if (areStatesEqual(nextState, state)) {
           return;
         }
 
-        const prevStateProps = stateProps;
-        const nextStateProps = (stateProps = mapStateToProps(
-          nextState,
-          shouldUpdateStatePropsOnOwnPropsChange ? ownProps : undefined
-        ));
+        state = nextState;
+        const nextStateProps = mapStateToProps(nextState, ownProps);
 
-        if (!areStatePropsEqual(nextStateProps, prevStateProps)) {
-          changeProps(nextStateProps, dispatchProps, ownProps);
+        if (areStatePropsEqual(nextStateProps, stateProps)) {
+          return;
         }
-      };
 
-      const unsubscribeStore = subscribe(stateChangeHandler);
-      instance.$$.on_destroy.push(unsubscribeStore);
-    }
-
-    const propsChangeHandler = ownPropsChange => {
-      const prevOwnProps = ownProps;
-      const nextOwnProps = (ownProps = {
-        ...prevOwnProps,
-        ...ownPropsChange
+        stateProps = nextStateProps;
+        changeProps();
       });
 
-      if (areOwnPropsEqual(nextOwnProps, prevOwnProps)) {
-        return;
-      }
+      instance.$$.on_destroy.push(unsubscribe);
+    }
 
-      let nextStateProps, nextDispatchProps;
-
-      if (shouldUpdateStatePropsOnOwnPropsChange) {
-        nextStateProps = stateProps = mapStateToProps(getState(), ownProps);
-      }
-
-      if (shouldUpdateDispatchPropsOnOwnPropsChange) {
-        nextDispatchProps = dispatchProps = mapDispatchToProps(
-          dispatch,
-          ownProps
-        );
-      }
-
-      changeProps(nextStateProps, nextDispatchProps, nextOwnProps);
-    };
-
-    const changeProps = (nextStateProps, nextDispatchProps, nextOwnProps) => {
-      const prevMergedProps = mergedProps;
-      const nextMergedProps = (mergedProps = mergeProps(
-        nextStateProps,
-        nextDispatchProps,
-        nextOwnProps
-      ));
-
-      if (!areMergedPropsEqual(nextMergedProps, prevMergedProps)) {
-        propsSetter(nextMergedProps);
-      }
-    };
-
-    instance.$set = propsChangeHandler;
+    instance.$set = onOwnPropsChange;
+    changeProps();
 
     return instance;
   };
