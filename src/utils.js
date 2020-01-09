@@ -6,6 +6,26 @@ export function stubFalse() {
   return false;
 }
 
+export function noop() {}
+
+export function stack() {
+  let value = {};
+
+  const pop = () => {
+    const returnVal = value;
+    value = {};
+    return returnVal;
+  };
+  const push = source => {
+    value = {
+      ...value,
+      ...source
+    };
+  };
+
+  return { pop, push };
+}
+
 /**
  * Source: https://github.com/lodash/lodash/blob/master/isObject.js
  * License MIT
