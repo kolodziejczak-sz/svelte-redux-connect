@@ -49,8 +49,8 @@ export default connect(mapStateToProps, mapDispatchToProps)(Todos);
 
 // Todos/Todos.svelte
 <script>
-  export let addTodo = () => {};
-  export let todos = [];
+  export let addTodo;
+  export let todos;
 
   let text = "";
 </script>
