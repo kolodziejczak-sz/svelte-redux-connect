@@ -1,5 +1,5 @@
-import { shallowEqual, strictEqual, stubFalse } from "./utils";
 import { getContext } from "svelte";
+import { shallowEqual, strictEqual, stubFalse, noop, stack } from "./utils";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
@@ -34,6 +34,8 @@ const connect = (
   const shouldMapDispatchToPropsOnOwnPropsChange =
     mapDispatchToProps && dispatchToPropsDraft.length === 2;
 
+  const initialSetPropsStack = stack();
+
   return function(options) {
     const store = context || getContext(STORE_CONTEXT_KEY);
 
@@ -46,23 +48,14 @@ const connect = (
 
     const { getState, dispatch, subscribe } = store;
     const { props: initialOwnProps } = options;
-    const instance = new ComponentClass(options);
-    const setProps = instance.$set;
 
     let state,
       stateProps,
       dispatchProps,
       mergedProps,
-      ownProps = initialOwnProps;
-
-    if (mapStateToProps) {
-      state = getState();
-      stateProps = mapStateToProps(state, initialOwnProps);
-    }
-
-    if (mapDispatchToProps) {
-      dispatchProps = mapDispatchToProps(dispatch, initialOwnProps);
-    }
+      ownProps = initialOwnProps,
+      setProps = initialSetPropsStack.push,
+      unsubscribe = noop;
 
     const changeProps = () => {
       const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
@@ -101,7 +94,7 @@ const connect = (
     const shouldSubscribeToStore = Boolean(mapStateToProps);
 
     if (shouldSubscribeToStore) {
-      const unsubscribe = subscribe(() => {
+      unsubscribe = subscribe(() => {
         const nextState = getState();
 
         if (areStatesEqual(nextState, state)) {
@@ -118,12 +111,37 @@ const connect = (
         stateProps = nextStateProps;
         changeProps();
       });
+    }
 
-      instance.$$.on_destroy.push(unsubscribe);
+    if (mapStateToProps) {
+      state = getState();
+      stateProps = mapStateToProps(state, initialOwnProps);
+    }
+
+    if (mapDispatchToProps) {
+      dispatchProps = mapDispatchToProps(dispatch, initialOwnProps);
+    }
+
+    mergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+
+    const instance = new ComponentClass({
+      ...options,
+      ...{
+        props: mergedProps
+      }
+    });
+
+    setProps = instance.$set;
+
+    const stackedPropsToSet = initialSetPropsStack.pop();
+    const anyInitialPropsToSet = Boolean(Object.keys(stackedPropsToSet).length);
+
+    if (anyInitialPropsToSet) {
+      setProps(stackedPropsToSet);
     }
 
     instance.$set = onOwnPropsChange;
-    changeProps();
+    instance.$$.on_destroy.push(unsubscribe);
 
     return instance;
   };
