@@ -40,15 +40,41 @@ describe("mapDispatchToPropsFactory", () => {
       dumbFooAction
     };
 
-    it("should return an object with every value as function", () => {
+    it("should return an object with the same keys", () => {
       const mapDispatchToProps = mapDispatchToPropsFactory(
         mapDispatchToPropsObjParam
       );
-      const returnValue = mapDispatchToProps(noop);
+      const dispatchProps = mapDispatchToProps(noop);
+      const dispatchPropsKeys = Object.keys(dispatchProps);
+      const passedObjectKeys = Object.keys(mapDispatchToPropsObjParam);
 
-      expect(Object.values(returnValue).length).toBe(
-        Object.values(mapDispatchToPropsObjParam).length
+      expect(dispatchPropsKeys).toEqual(passedObjectKeys);
+    });
+
+    it("should return an object with functions as values", () => {
+      const mapDispatchToProps = mapDispatchToPropsFactory(
+        mapDispatchToPropsObjParam
       );
+      const dispatchProps = mapDispatchToProps(noop);
+      const dispatchPropsValues = Object.values(dispatchProps);
+
+      dispatchPropsValues.forEach(val => {
+        expect(typeof val).toBe("function");
+      });
+    });
+
+    it("should call dispatch and actionCreator on dispatchedAction call", () => {
+      const actionCreatorFn = jest.fn();
+      const actions = { a: actionCreatorFn };
+      const mapDispatchToProps = mapDispatchToPropsFactory(actions);
+      const dispatchFn = jest.fn();
+      const dispatchedActions = mapDispatchToProps(dispatchFn);
+
+      const actionNameToDispatch = Object.keys(dispatchedActions)[0];
+      dispatchedActions[actionNameToDispatch]();
+
+      expect(dispatchFn).toHaveBeenCalledTimes(1);
+      expect(actionCreatorFn).toHaveBeenCalledTimes(1);
     });
   });
 });
