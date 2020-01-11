@@ -1,14 +1,15 @@
 import { getContext } from "svelte";
-import { shallowEqual, strictEqual, stubFalse, noop, stack } from "./utils";
+import {
+  shallowEqual,
+  strictEqual,
+  stubFalse,
+  noop,
+  stack,
+  defaultMergeProps
+} from "./utils";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
-
-const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
-  ...ownProps,
-  ...stateProps,
-  ...dispatchProps
-});
 
 const connect = (
   stateToPropsDraft,

@@ -2,31 +2,6 @@ export function isFunction(obj) {
   return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 
-export function stubFalse() {
-  return false;
-}
-
-export function noop() {}
-
-export function stack() {
-  let value;
-
-  const pop = () => {
-    const returnVal = value;
-    value = undefined;
-    return returnVal;
-  };
-
-  const push = source => {
-    value = {
-      ...value,
-      ...source
-    };
-  };
-
-  return { pop, push };
-}
-
 /**
  * Source: https://github.com/lodash/lodash/blob/master/isObject.js
  * License MIT
@@ -78,4 +53,37 @@ export function shallowEqual(objA, objB) {
   }
 
   return true;
+}
+
+export function defaultMergeProps(stateProps, dispatchProps, ownProps) {
+  return {
+    ...ownProps,
+    ...stateProps,
+    ...dispatchProps
+  };
+}
+
+export function noop() {}
+
+export function stubFalse() {
+  return false;
+}
+
+export function stack() {
+  let value;
+
+  const pop = () => {
+    const returnVal = value;
+    value = undefined;
+    return returnVal;
+  };
+
+  const push = source => {
+    value = {
+      ...value,
+      ...source
+    };
+  };
+
+  return { pop, push };
 }
