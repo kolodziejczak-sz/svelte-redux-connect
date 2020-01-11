@@ -63,9 +63,9 @@ describe("mapDispatchToPropsFactory", () => {
       });
     });
 
-    it("should call dispatch and actionCreator on dispatchedAction call", () => {
+    it("should call dispatch and actionCreator on dispatchedAction", () => {
       const actionCreatorFn = jest.fn();
-      const actions = { a: actionCreatorFn };
+      const actions = { actionCreatorFn };
       const mapDispatchToProps = mapDispatchToPropsFactory(actions);
       const dispatchFn = jest.fn();
       const dispatchedActions = mapDispatchToProps(dispatchFn);
