@@ -4,7 +4,7 @@
   "description": "Redux binding to Svelte based on react-redux",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --watch"
   },
   "repository": {
     "type": "git",
@@ -28,5 +28,11 @@
   "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
   "dependencies": {
     "svelte": "^3.16.7"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.7.7",
+    "@babel/preset-env": "^7.7.7",
+    "babel-jest": "^24.9.0",
+    "jest": "^24.9.0"
   }
 }
