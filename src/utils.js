@@ -9,13 +9,14 @@ export function stubFalse() {
 export function noop() {}
 
 export function stack() {
-  let value = {};
+  let value;
 
   const pop = () => {
     const returnVal = value;
-    value = {};
+    value = undefined;
     return returnVal;
   };
+
   const push = source => {
     value = {
       ...value,
