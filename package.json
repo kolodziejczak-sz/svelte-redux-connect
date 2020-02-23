@@ -1,38 +1,38 @@
 {
-  "name": "svelte-redux-connect",
-  "version": "1.1.6",
-  "description": "Redux binding to Svelte based on react-redux",
-  "main": "index.js",
-  "scripts": {
-    "test": "jest --watch"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kolodziejczak-sz/svelte-redux-connect.git"
-  },
-  "keywords": [
-    "redux",
-    "svelte",
-    "react-redux",
-    "react-connect",
-    "svelte-redux",
-    "svelte3",
-    "react",
-    "connect"
-  ],
-  "author": "kolodziejczak-sz",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/kolodziejczak-sz/svelte-redux-connect/issues"
-  },
-  "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
-  "dependencies": {
-    "svelte": "^3.16.7"
-  },
-  "devDependencies": {
-    "@babel/core": "^7.7.7",
-    "@babel/preset-env": "^7.7.7",
-    "babel-jest": "^24.9.0",
-    "jest": "^24.9.0"
-  }
+    "name": "svelte-redux-connect",
+    "version": "1.1.7",
+    "description": "Redux binding to Svelte based on react-redux",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kolodziejczak-sz/svelte-redux-connect.git"
+    },
+    "keywords": [
+        "redux",
+        "svelte",
+        "react-redux",
+        "react-connect",
+        "svelte-redux",
+        "svelte3",
+        "react",
+        "connect"
+    ],
+    "author": "kolodziejczak-sz",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/kolodziejczak-sz/svelte-redux-connect/issues"
+    },
+    "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
+    "dependencies": {
+        "svelte": "^3.19.0"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.7.7",
+        "@babel/preset-env": "^7.7.7",
+        "babel-jest": "^24.9.0",
+        "jest": "^24.9.0"
+    }
 }
