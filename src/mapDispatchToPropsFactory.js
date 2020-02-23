@@ -1,22 +1,22 @@
-import { isFunction, isObject } from "./utils";
+import { isObject } from "./utils";
 
-const mapDispatchToPropsFactory = draft => {
-  if (isFunction(draft)) {
+const defaultMapDispatchToProps = dispatch => ({ dispatch });
+
+const mapDispatchToPropsFactory = (draft = defaultMapDispatchToProps) => {
+    if (isObject(draft)) {
+        const draftEntries = Object.entries(draft);
+
+        return dispatch =>
+            draftEntries.reduce(
+                (dispatchProps, [key, actionCreator]) => ({
+                    ...dispatchProps,
+                    [key]: (...args) => dispatch(actionCreator(...args))
+                }),
+                {}
+            );
+    }
+
     return draft;
-  }
-
-  if (isObject(draft)) {
-    return dispatch =>
-      Object.entries(draft).reduce((dispatchProps, [key, actionCreator]) => {
-        dispatchProps[key] = (...args) => dispatch(actionCreator(...args));
-
-        return dispatchProps;
-      }, {});
-  }
-
-  console.warn(
-    "redux-svelte-connect: mapDispatchToProps is not a function or an object"
-  );
 };
 
 export default mapDispatchToPropsFactory;
