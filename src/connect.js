@@ -1,150 +1,118 @@
 import { getContext } from "svelte";
-import { shallowEqual, strictEqual, stubFalse, noop, stack } from "./utils";
+import { shallowEqual, strictEqual, stubFalse, noop, defaultMergeProps } from "./utils";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";
 
-const defaultMergeProps = (stateProps, dispatchProps, ownProps) => ({
-  ...ownProps,
-  ...stateProps,
-  ...dispatchProps
-});
-
 const connect = (
-  stateToPropsDraft,
-  dispatchToPropsDraft,
-  mergeProps = defaultMergeProps,
-  {
-    context,
-    areStatesEqual = strictEqual,
-    areOwnPropsEqual = shallowEqual,
-    areStatePropsEqual = shallowEqual,
-    areMergedPropsEqual = mergeProps === defaultMergeProps
-      ? stubFalse
-      : shallowEqual
-  } = {}
+    stateToPropsDraft,
+    dispatchToPropsDraft,
+    mergeProps = defaultMergeProps,
+    {
+        context,
+        areStatesEqual = strictEqual,
+        areOwnPropsEqual = shallowEqual,
+        areStatePropsEqual = shallowEqual,
+        areMergedPropsEqual = mergeProps === defaultMergeProps ? stubFalse : shallowEqual
+    } = {}
 ) => ComponentClass => {
-  const mapStateToProps =
-    stateToPropsDraft && mapStateToPropsFactory(stateToPropsDraft);
-  const mapDispatchToProps =
-    dispatchToPropsDraft && mapDispatchToPropsFactory(dispatchToPropsDraft);
+    const mapStateToProps = mapStateToPropsFactory(stateToPropsDraft);
+    const mapDispatchToProps = mapDispatchToPropsFactory(dispatchToPropsDraft);
 
-  const shouldMapStateToPropsOnOwnPropsChange =
-    mapStateToProps && stateToPropsDraft.length === 2;
-  const shouldMapDispatchToPropsOnOwnPropsChange =
-    mapDispatchToProps && dispatchToPropsDraft.length === 2;
+    const shouldSubscribeToStore = Boolean(stateToPropsDraft);
+    const shouldMapStateToPropsOnOwnPropsChange = (mapStateToProps || {}).length === 2;
+    const shouldMapDispatchToPropsOnOwnPropsChange = (mapDispatchToProps || {}).length === 2;
 
-  const initialSetPropsStack = stack();
+    return function(options) {
+        const store = context || getContext(STORE_CONTEXT_KEY);
 
-  return function(options) {
-    const store = context || getContext(STORE_CONTEXT_KEY);
-
-    if (!store) {
-      console.warn(
-        "redux-svelte-connect: store does not exist. Use the <Provider> component or pass the context as an option to the connect function"
-      );
-      return;
-    }
-
-    const { getState, dispatch, subscribe } = store;
-    const { props: initialOwnProps } = options;
-
-    let state,
-      stateProps,
-      dispatchProps,
-      mergedProps,
-      ownProps = initialOwnProps,
-      setProps = initialSetPropsStack.push,
-      unsubscribe = noop;
-
-    const changeProps = () => {
-      const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
-
-      if (areMergedPropsEqual(nextMergedProps, mergedProps)) {
-        return;
-      }
-
-      mergedProps = nextMergedProps;
-      setProps(mergedProps);
-    };
-
-    const onOwnPropsChange = ownPropsChange => {
-      const nextOwnProps = {
-        ...ownProps,
-        ...ownPropsChange
-      };
-
-      if (areOwnPropsEqual(nextOwnProps, ownProps)) {
-        return;
-      }
-
-      ownProps = nextOwnProps;
-
-      if (shouldMapStateToPropsOnOwnPropsChange) {
-        stateProps = mapStateToProps(getState(), ownProps);
-      }
-
-      if (shouldMapDispatchToPropsOnOwnPropsChange) {
-        dispatchProps = mapDispatchToProps(dispatch, ownProps);
-      }
-
-      changeProps();
-    };
-
-    const shouldSubscribeToStore = Boolean(mapStateToProps);
-
-    if (shouldSubscribeToStore) {
-      unsubscribe = subscribe(() => {
-        const nextState = getState();
-
-        if (areStatesEqual(nextState, state)) {
-          return;
+        if (!store) {
+            console.warn(
+                "redux-svelte-connect: ",
+                "Cannot access the store. Use the <Provider> component or pass the context as an option to the connect function"
+            );
+            return;
         }
 
-        state = nextState;
-        const nextStateProps = mapStateToProps(nextState, ownProps);
+        const { getState, dispatch, subscribe } = store;
+        const { props: initialOwnProps } = options;
 
-        if (areStatePropsEqual(nextStateProps, stateProps)) {
-          return;
+        let ownProps = initialOwnProps;
+        let state = getState();
+        let stateProps = mapStateToProps(state, ownProps);
+        let dispatchProps = mapDispatchToProps(dispatch, ownProps);
+        let mergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+
+        let instancePropsSetter = noop;
+
+        const instance = new ComponentClass({
+            ...options,
+            props: mergedProps
+        });
+
+        instancePropsSetter = instance.$set;
+
+        if (shouldSubscribeToStore) {
+            const unsubscribe = subscribe(handleStateChange);
+            instance.$$.on_destroy.push(unsubscribe);
         }
 
-        stateProps = nextStateProps;
-        changeProps();
-      });
-    }
+        instance.$set = handleOwnPropsChange;
 
-    if (mapStateToProps) {
-      state = getState();
-      stateProps = mapStateToProps(state, initialOwnProps);
-    }
+        function handleNewProps() {
+            const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+            const hasMergedPropsChanged = !areMergedPropsEqual(nextMergedProps, mergedProps);
+            mergedProps = nextMergedProps;
 
-    if (mapDispatchToProps) {
-      dispatchProps = mapDispatchToProps(dispatch, initialOwnProps);
-    }
+            if (hasMergedPropsChanged) {
+                instancePropsSetter(mergedProps);
+            }
+        }
 
-    mergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+        function handleOwnPropsChange(ownPropsChange) {
+            const nextOwnProps = {
+                ...ownProps,
+                ...ownPropsChange
+            };
 
-    const instance = new ComponentClass({
-      ...options,
-      ...{
-        props: mergedProps
-      }
-    });
+            const hasOwnPropsChanged = !areOwnPropsEqual(nextOwnProps, ownProps);
+            if (!hasOwnPropsChanged) {
+                return;
+            }
 
-    setProps = instance.$set;
+            ownProps = nextOwnProps;
 
-    const stackedPropsToSet = initialSetPropsStack.pop();
-    const anyInitialPropsToSet = Boolean(Object.keys(stackedPropsToSet).length);
+            if (shouldMapStateToPropsOnOwnPropsChange) {
+                stateProps = mapStateToProps(getState(), ownProps);
+            }
 
-    if (anyInitialPropsToSet) {
-      setProps(stackedPropsToSet);
-    }
+            if (shouldMapDispatchToPropsOnOwnPropsChange) {
+                dispatchProps = mapDispatchToProps(dispatch, ownProps);
+            }
 
-    instance.$set = onOwnPropsChange;
-    instance.$$.on_destroy.push(unsubscribe);
+            handleNewProps();
+        }
 
-    return instance;
-  };
+        function handleStateChange() {
+            const nextState = getState();
+            const hasStateChanged = !areStatesEqual(nextState, state);
+
+            if (!hasStateChanged) {
+                return;
+            }
+
+            state = nextState;
+            const nextStateProps = mapStateToProps(state, ownProps);
+            const hasStatePropsChanged = !areStatePropsEqual(nextStateProps, stateProps);
+
+            if (hasStatePropsChanged) {
+                stateProps = nextStateProps;
+                handleNewProps();
+            }
+        }
+
+        return instance;
+    };
 };
 
 export default connect;
