@@ -9,7 +9,7 @@ const connect = (
     dispatchToPropsDraft,
     mergeProps = defaultMergeProps,
     {
-        context,
+        store: storeFromOptions,
         areStatesEqual = strictEqual,
         areOwnPropsEqual = shallowEqual,
         areStatePropsEqual = shallowEqual,
@@ -20,16 +20,16 @@ const connect = (
     const mapDispatchToProps = mapDispatchToPropsFactory(dispatchToPropsDraft);
 
     const shouldSubscribeToStore = Boolean(stateToPropsDraft);
-    const shouldMapStateToPropsOnOwnPropsChange = (mapStateToProps || {}).length === 2;
-    const shouldMapDispatchToPropsOnOwnPropsChange = (mapDispatchToProps || {}).length === 2;
+    const shouldMapStateToPropsOnOwnPropsChange = (mapStateToProps || []).length === 2;
+    const shouldMapDispatchToPropsOnOwnPropsChange = (mapDispatchToProps || []).length === 2;
 
     return function(options) {
-        const store = context || getContext(STORE_CONTEXT_KEY);
+        const store = storeFromOptions || getContext(STORE_CONTEXT_KEY);
 
         if (!store) {
             console.warn(
                 "redux-svelte-connect: ",
-                "Cannot access the store. Use the <Provider> component or pass the context as an option to the connect function"
+                "Cannot access the store. Use the <Provider> component or pass the store as an option to the connect function"
             );
             return;
         }
@@ -51,22 +51,11 @@ const connect = (
         });
 
         instancePropsSetter = instance.$set;
+        instance.$set = handleOwnPropsChange;
 
         if (shouldSubscribeToStore) {
             const unsubscribe = subscribe(handleStateChange);
             instance.$$.on_destroy.push(unsubscribe);
-        }
-
-        instance.$set = handleOwnPropsChange;
-
-        function handleNewProps() {
-            const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
-            const hasMergedPropsChanged = !areMergedPropsEqual(nextMergedProps, mergedProps);
-            mergedProps = nextMergedProps;
-
-            if (hasMergedPropsChanged) {
-                instancePropsSetter(mergedProps);
-            }
         }
 
         function handleOwnPropsChange(ownPropsChange) {
@@ -76,11 +65,11 @@ const connect = (
             };
 
             const hasOwnPropsChanged = !areOwnPropsEqual(nextOwnProps, ownProps);
+            ownProps = nextOwnProps;
+
             if (!hasOwnPropsChanged) {
                 return;
             }
-
-            ownProps = nextOwnProps;
 
             if (shouldMapStateToPropsOnOwnPropsChange) {
                 stateProps = mapStateToProps(getState(), ownProps);
@@ -96,18 +85,28 @@ const connect = (
         function handleStateChange() {
             const nextState = getState();
             const hasStateChanged = !areStatesEqual(nextState, state);
+            state = nextState;
 
             if (!hasStateChanged) {
                 return;
             }
 
-            state = nextState;
             const nextStateProps = mapStateToProps(state, ownProps);
             const hasStatePropsChanged = !areStatePropsEqual(nextStateProps, stateProps);
+            stateProps = nextStateProps;
 
             if (hasStatePropsChanged) {
-                stateProps = nextStateProps;
                 handleNewProps();
+            }
+        }
+
+        function handleNewProps() {
+            const nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
+            const hasMergedPropsChanged = !areMergedPropsEqual(nextMergedProps, mergedProps);
+            mergedProps = nextMergedProps;
+
+            if (hasMergedPropsChanged) {
+                instancePropsSetter(mergedProps);
             }
         }
 
