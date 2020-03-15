@@ -3,10 +3,10 @@
 Svelte bindings for Redux.
 Connect API based on react-redux.
 
-This library let's you use Redux without any constraints or awkward subscription management.
+This library let's you use Redux without any constraints or awkward store subscription management.
 I've recreated the solution from react-redux - the connect API is almost identical.
 
-I'm aware of fact that there's already npm-packages which are trying to accomplish the same goal, but actually I don't think they work as they should be - I tried them and I had to either use the Svelte's store, change API or take care of the store subscription in the body of connected component. This tiny library is the answer to the above problems, and I decided to share it with everyone.
+I'm aware of fact that there's already npm-packages which are trying to accomplish the same goal, but actually I don't think they work as they should be - I tried them and I had to either use the Svelte's store, change API or take care of the store subscription in the body of connected component. This tiny library is the answer to the above problems, and I decided to share my work with everyone.
 
 Basic example below.
 
@@ -68,6 +68,8 @@ If you're interested in docs you can rely on https://react-redux.js.org/api/conn
 
 Although there's little difference:
 
-- theres no support for 2 options fields: forwardRef and pure because the author consider them as React specific. The implementation consider all components as pure in the context of areStatesEqual, areOwnPropsEqual, areStatePropsEqual, areMergedPropsEqual functions behavior.
+-   theres no support for 2 options fields: forwardRef and pure because the author consider them as React specific,
+-   the implementation consider all components as pure in the context of areStatesEqual, areOwnPropsEqual, areStatePropsEqual, areMergedPropsEqual functions default behavior,
+-   the counterpart of option options.context is options.store
 
 Feel free to submit any issue or PR.
