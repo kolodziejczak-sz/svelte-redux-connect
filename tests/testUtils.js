@@ -34,9 +34,5 @@ export const render = (
     const connectedComponent = connectContainer(Component);
     const renderedComponent = connectedComponent({ props: initialProps });
 
-    return {
-        connectContainer,
-        connectedComponent,
-        renderedComponent
-    };
+    return renderedComponent;
 };

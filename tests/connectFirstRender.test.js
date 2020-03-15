@@ -1,4 +1,4 @@
-import { render, createStore } from "./mock";
+import { render, createStore } from "./testUtils";
 import { getContext as mockGetContext } from "svelte";
 
 jest.mock("svelte");
@@ -6,13 +6,13 @@ jest.mock("svelte");
 describe("connect first render", () => {
     it("should warn and render undefined if store is not provided", () => {
         mockGetContext.mockImplementationOnce(() => undefined);
-
         const originalWarn = console.warn;
         console.warn = jest.fn();
 
-        const { renderedComponent } = render();
+        const component = render();
+
         expect(console.warn).toBeCalledTimes(1);
-        expect(renderedComponent).toBe(undefined);
+        expect(component).toBe(undefined);
 
         console.warn = originalWarn;
     });
@@ -21,12 +21,12 @@ describe("connect first render", () => {
         const mockStore = createStore();
         const initialProps = { foo: 1, bar: 2 };
 
-        const { renderedComponent } = render([undefined, undefined, undefined, { context: mockStore }], {
+        const component = render([undefined, undefined, undefined, { store: mockStore }], {
             initialProps
         });
 
         const expectedPropsKeys = ["state", "dispatch", ...Object.keys(initialProps)].sort();
-        const returnedPropsKeys = Object.keys(renderedComponent.options.props).sort();
+        const returnedPropsKeys = Object.keys(component.options.props).sort();
         expect(returnedPropsKeys).toEqual(expectedPropsKeys);
     });
 
@@ -38,7 +38,7 @@ describe("connect first render", () => {
             initialState
         });
 
-        render([mapStateToProps, undefined, undefined, { context: mockStore }], {
+        render([mapStateToProps, undefined, undefined, { store: mockStore }], {
             initialProps: initialOwnProps
         });
 
@@ -51,7 +51,7 @@ describe("connect first render", () => {
         const mapDispatchToProps = jest.fn(() => {});
         const dispatch = () => {};
 
-        render([undefined, mapDispatchToProps, undefined, { context: createStore({ dispatch }) }], {
+        render([undefined, mapDispatchToProps, undefined, { store: createStore({ dispatch }) }], {
             initialProps: initialOwnProps
         });
 
@@ -69,35 +69,30 @@ describe("connect first render", () => {
         const mapDispatchToProps = jest.fn(() => dispatchProps);
         const mergeProps = jest.fn(() => mergedProps);
 
-        const { renderedComponent } = render(
-            [mapStateToProps, mapDispatchToProps, mergeProps, { context: createStore() }],
-            {
-                initialProps: ownProps
-            }
-        );
+        const component = render([mapStateToProps, mapDispatchToProps, mergeProps, { store: createStore() }], {
+            initialProps: ownProps
+        });
 
         expect(mergeProps).toBeCalledTimes(1);
         expect(mergeProps).toHaveBeenCalledWith(stateProps, dispatchProps, ownProps);
-        expect(renderedComponent.options.props).toBe(mergedProps);
+        expect(component.options.props).toBe(mergedProps);
     });
 
     it("should subscribe to store only when mapStateToProps are passed", () => {
         const mapStateToProps = jest.fn();
         const unsub = () => {};
         const subscribe = jest.fn(() => unsub);
-        const mockStore = createStore({
-            subscribe
-        });
+        const mockStore = createStore({ subscribe });
 
-        const { renderedComponent } = render([mapStateToProps, undefined, undefined, { context: mockStore }]);
-        const onDestroy = renderedComponent.$$.on_destroy;
+        const component = render([mapStateToProps, undefined, undefined, { store: mockStore }]);
+        const onDestroy = component.$$.on_destroy;
 
         expect(onDestroy.indexOf(unsub)).not.toBe(-1);
         expect(subscribe).toBeCalledTimes(1);
 
-        subscribe.mockReset();
+        subscribe.mockClear();
 
-        render([undefined, undefined, undefined, { context: mockStore }]);
+        render([undefined, undefined, undefined, { store: mockStore }]);
 
         expect(subscribe).toBeCalledTimes(0);
     });
