@@ -43,14 +43,12 @@ const connect = (
         let dispatchProps = mapDispatchToProps(dispatch, ownProps);
         let mergedProps = mergeProps(stateProps, dispatchProps, ownProps);
 
-        let instancePropsSetter = noop;
-
         const instance = new ComponentClass({
             ...options,
             props: mergedProps
         });
 
-        instancePropsSetter = instance.$set;
+        const instancePropsSetter = instance.$set.bind(instance);
         instance.$set = handleOwnPropsChange;
 
         if (shouldSubscribeToStore) {
