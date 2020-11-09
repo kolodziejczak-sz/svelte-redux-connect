@@ -1,5 +1,5 @@
 import mapDispatchToPropsFactory from "../src/mapDispatchToPropsFactory";
-import { noop } from "../src/utils";
+import { noop } from "./testUtils";
 
 describe("mapDispatchToPropsFactory", () => {
     it("should return (dispatch) => { dispatch } by default", () => {

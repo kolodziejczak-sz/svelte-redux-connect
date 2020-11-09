@@ -1,5 +1,5 @@
 import { getContext } from "svelte";
-import { shallowEqual, strictEqual, stubFalse, noop, defaultMergeProps } from "./utils";
+import { shallowEqual, strictEqual, stubFalse, defaultMergeProps } from "./utils";
 import { STORE_CONTEXT_KEY } from "./constants";
 import mapStateToPropsFactory from "./mapStateToPropsFactory";
 import mapDispatchToPropsFactory from "./mapDispatchToPropsFactory";

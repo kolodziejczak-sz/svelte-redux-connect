@@ -50,8 +50,6 @@ export function defaultMergeProps(stateProps, dispatchProps, ownProps) {
     };
 }
 
-export function noop() {}
-
 export function stubFalse() {
     return false;
 }

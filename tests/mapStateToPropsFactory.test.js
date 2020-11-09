@@ -1,5 +1,5 @@
 import mapStateToPropsFactory from "../src/mapStateToPropsFactory";
-import { noop } from "../src/utils";
+import { noop } from "./testUtils";
 
 describe("mapStateToPropsFactory", () => {
     it("should return (state) => { state } by default", () => {

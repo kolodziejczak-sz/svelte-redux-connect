@@ -1,6 +1,6 @@
 import connect from "../src/connect";
 
-const noop = () => {};
+export const noop = () => {};
 
 export const createStore = ({
     initialState = {},
