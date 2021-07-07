@@ -26,8 +26,8 @@
         "url": "https://github.com/kolodziejczak-sz/svelte-redux-connect/issues"
     },
     "homepage": "https://github.com/kolodziejczak-sz/svelte-redux-connect#readme",
-    "dependencies": {
-        "svelte": "3.*"
+    "peerDependencies": {
+        "svelte": "3.x"
     },
     "devDependencies": {
         "@babel/core": "^7.12.3",
